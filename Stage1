@@ -1,0 +1,107 @@
+
+## # Fine-Tune a Generative AI Model for Dialogue Summarization
+
+# 1 - Set up Kernel, Load Required Dependencies, Dataset and LLM
+
+# 1.1 - Set up Kernel and Required Dependencies
+# Importing necessary libraries and setting up environment.
+
+import os
+
+# Defining expected and current instance types.
+instance_type_expected = 'ml-m5-2xlarge'
+instance_type_current = os.environ.get('HOSTNAME')
+
+# Printing expected and current instance types.
+print(f'Expected instance type: instance-datascience-{instance_type_expected}')
+print(f'Currently chosen instance type: {instance_type_current}')
+
+# Assertion to ensure the chosen instance type matches the expected type.
+assert instance_type_expected in instance_type_current, f'ERROR. You selected the {instance_type_current} instance type. Please select {instance_type_expected} instead as shown on the screenshot above'
+print("Instance type has been chosen correctly.")
+
+
+# Installing/updating required libraries.
+%pip install -U datasets==2.17.0
+%pip install --upgrade pip
+%pip install --disable-pip-version-check \
+    torch==1.13.1 \
+    torchdata==0.5.1 --quiet
+%pip install \
+    transformers==4.27.2 \
+    evaluate==0.4.0 \
+    rouge_score==0.1.2 \
+    loralib==0.1.1 \
+    peft==0.3.0 --quiet
+
+
+# 1.2 - Load Dataset and LLM
+# Importing necessary libraries for loading dataset and models.
+
+from datasets import load_dataset
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, GenerationConfig, TrainingArguments, Trainer
+import torch
+import time
+import evaluate
+import pandas as pd
+import numpy as np
+
+# Defining the Hugging Face dataset name.
+huggingface_dataset_name = "knkarthick/dialogsum"
+
+# Loading the dataset.
+dataset = load_dataset(huggingface_dataset_name)
+
+# Displaying the loaded dataset.
+dataset
+
+
+# 1.3 - Test the Model with Zero Shot Inferencing
+# Initializing model and tokenizer.
+
+model_name='google/flan-t5-base'
+original_model = AutoModelForSeq2SeqLM.from_pretrained(model_name, torch_dtype=torch.bfloat16)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+# Selecting a dialogue from the test dataset.
+index = 200
+dialogue = dataset['test'][index]['dialogue']
+summary = dataset['test'][index]['summary']
+
+# Constructing a prompt for the model to generate a summary.
+prompt = f"""
+Summarize the following conversation.
+
+{dialogue}
+
+Summary:
+"""
+
+# Encoding the prompt.
+inputs = tokenizer(prompt, return_tensors='pt')
+
+# Generating output using the model.
+output = tokenizer.decode(
+    original_model.generate(
+        inputs["input_ids"], 
+        max_new_tokens=200,
+    )[0], 
+    skip_special_tokens=True
+)
+
+# Printing results.
+dash_line = '-'.join('' for x in range(100))
+print(dash_line)
+print(f'INPUT PROMPT:\n{prompt}')
+print(dash_line)
+print(f'BASELINE HUMAN SUMMARY:\n{summary}\n')
+print(dash_line)
+print(f'MODEL GENERATION - ZERO SHOT:\n{output}')
+
+Comments and Explanations:
+
+1 - Set up Kernel, Load Required Dependencies, Dataset and LLM: This section outlines the steps involved in setting up the environment, loading necessary libraries, dataset, and the Language Model (LLM) for dialogue summarization.
+1.1 - Set up Kernel and Required Dependencies: This subsection focuses on importing essential libraries and ensuring the correct instance type is used for the environment.
+1.2 - Load Dataset and LLM: Here, the Hugging Face dataset and the pre-trained language model are loaded.
+1.3 - Test the Model with Zero Shot Inferencing: This part involves testing the loaded model with a dialogue prompt to generate a summary without fine-tuning.
+The code then proceeds with importing necessary libraries, loading the dataset, and initializing the model and tokenizer. Finally, it selects a dialogue from the dataset, constructs a prompt, generates a summary using the model, and prints the input prompt, baseline human summary, and the generated summary.
