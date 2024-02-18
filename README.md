@@ -18,6 +18,7 @@ Generative AI models are a type of artificial neural network that can generate n
 
 These models have a wide range of applications, including generating new images, music, or text, creating synthetic data for machine learning, and even generating new molecules for drug discovery.
 
+7. https://blogs.nvidia.com/blog/what-is-retrieval-augmented-generation/ RAGs
 ## Example
 
 In the code provided, a VAE is being trained on the MNIST dataset of handwritten digits. The VAE learns to reconstruct the input images by mapping them into a lower-dimensional latent space. The loss function combines reconstruction and regularization losses, which are used to train the model.
